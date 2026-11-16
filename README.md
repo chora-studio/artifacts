@@ -1,3 +1,3 @@
-# research
+# artifacts
 
-chora studio research
+chora studio artifacts
