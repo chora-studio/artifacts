@@ -6,7 +6,7 @@ author: Chora Studio
 title: Research Artifacts
 description: A brief introduction to research artifacts.
 created: 2026-11-15
-updated: 2026-11-16
+updated: 2026-11-18
 ---
 
 # Research Artifacts
@@ -23,9 +23,9 @@ The immediate subdirectory (`artifacts`) is also a Git repository, so changes to
 
 The second repository (`website`) is the source code for a website (`https://chora.studio`) and it also has a remote repository (`https://github.com/chora-studio/website`). The first repository (`artifacts`) is a submodule (`artifacts`) in the second repository (`website`), so when changes are pushed from the first repository (`artifacts`), the submodule (`artifacts`) must pull those changes before the code in the second repository (`website`) is compiled.
 
- The source code for the website is written in a way that all markdown files within the Git submodule (`artifacts`) are compiled as web pages when the source code is compiled. The compiled source code is pushed to a branch on the remote repository that automatically deploys the website including all the compiled research artifacts in the form of web pages. The source code also includes an [index page](../) for the research artifacts.
+ The source code for the website is written in a way that all markdown files within the Git submodule (`artifacts`) are compiled as web pages when the source code is compiled. The compiled source code is pushed to a branch on the remote repository that automatically deploys the website including all the compiled research artifacts in the form of web pages. The source code also compiles an [index page](../) for the research artifacts.
 
- So back from the start, the research artifacts are written as markdown files (a widely supported and portable format), changes to those files are tracked with Git and pushed to a remote repository (tracking changes are important for several reasons), and then those changes are pulled into a submodule in another repository and compiled and deployed as web pages.
+ So back from the start, the research artifacts are written as markdown files (a widely supported and portable format), changes to those files are tracked with Git and pushed to a remote repository (tracking changes is important for several reasons), and then those changes are pulled into a submodule in another repository and compiled and deployed as web pages.
 
 ## Feeding The Artifacts
 
