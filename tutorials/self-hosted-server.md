@@ -1,17 +1,17 @@
 ---
 type: artifact
-category: tutorial
+category: tutorials
 status: active
 author: Chora Studio
-title: Self-Hosted Servers
-description: A tutorial on self-hosted servers.
+title: Self-Hosted Server
+description: A tutorial for running a self-hosted server.
 created: 2026-11-18
 updated: 2026-11-18
 ---
 
-# Self-Hosted Servers
+# Self-Hosted Server
 
-This is a tutorial for a self-hosted server. This is an experimental setup that is still being tested and therefore it is **not production ready**.
+This is a tutorial for running a self-hosted server. This setup is experimental and still being tested; this setup is not recommended for production.
 
 ## Prerequisites
 
@@ -21,16 +21,16 @@ This is a tutorial for a self-hosted server. This is an experimental setup that 
 
 #### Hardware
 
-- Raspberry Pi 4 Model B
+- Raspberry Pi 4 Model B (or later)
 - SD Card (San Disk recommended)
 
 #### Services
 
 - Cloudflare (with a purchased domain)
 
-## Installing Nixos
+## Installing NixOS
 
-Insert the SD card into the computer before proceeding. You will need a browser with internet access and nix installed on the computer.
+Insert the SD card into the computer before proceeding. You will need a browser with internet access and `nix` installed on the computer.
 
 #### 1. Download the latest SD card image
 
@@ -50,7 +50,7 @@ nix-shell -p zstd --run "unzstd <img-name>.img.zst"
 sudo dd if=<img-name>.img of=/dev/mmcblk0 bs=10MB oflag=dsync status=progress
 ```
 
-## Setting Up Nixos
+## Setting Up NixOS
 
 Insert the SD card into the Raspberry Pi before proceeding. You will need a monitor and keyboard plugged into the Raspberry Pi.
 
@@ -60,13 +60,13 @@ Insert the SD card into the Raspberry Pi before proceeding. You will need a moni
 nmtui
 ```
 
-#### 2. Generate Nixos configuration files
+#### 2. Generate NixOS configuration files
 
 ```
 sudo nixos-generate-config
 ```
 
-#### 3. Update Nixos configuration file
+#### 3. Update NixOS configuration file
 
 ```
 sudo nano /etc/nixos/configuration.nix
@@ -117,7 +117,7 @@ Manually turn off Raspberry Pi and then turn back on.
 
 ## SSH Access and Security
 
-Start from the computer and then proceed with the Raspberry Pi terminal (following step 3). The monitor and keyboard used with the Raspberry Pi are no longer needed now that SSH is configured on the device.
+Start from the computer and then proceed with the Raspberry Pi terminal (following step 3). The monitor and keyboard used with the Raspberry Pi are no longer needed now that SSH is enabled on the device.
 
 #### 1. Generate SSH key
 
@@ -170,7 +170,7 @@ sudo nixos-rebuild switch
 sudo reboot
 ```
 
-## Add Cloudflared Connector
+## Adding a Cloudflared Service
 
 Proceed with Cloudflare website and the Raspberry Pi terminal.
 
@@ -251,7 +251,7 @@ sudo nixos-rebuild switch
 sudo reboot
 ```
 
-## Create Website Server
+## Adding a Website Service
 
 Proceed with the Raspberry Pi terminal.
 
@@ -276,7 +276,6 @@ Add the following packages to the environment:
 
 ```nix
   environment.systemPackages = with pkgs; [
-    bun
     git
   ];
 ```
@@ -316,7 +315,13 @@ in
 }
 ```
 
-#### 2. Clone and build website
+#### 2. Rebuild system
+
+```
+sudo nixos-rebuild switch
+```
+
+#### 3. Clone and build website
 
 ```
 git clone https://github.com/example/website
@@ -335,6 +340,10 @@ git submodule update
 ```
 
 ```
+nix develop
+```
+
+```
 bun install
 ```
 
@@ -342,13 +351,11 @@ bun install
 bun run build
 ```
 
-#### 3. Rebuild system
+#### 4. Restart service and check status
 
 ```
-sudo nixos-rebuild switch
+sudo systemctl restart website
 ```
-
-#### 4. Check service status
 
 ```
 sudo systemctl status website
@@ -362,7 +369,7 @@ Open Cloudflare Tunnels and copy the tunnel ID, then open Cloudflare DNS and cre
 
 Open Cloudflare Tunnels and create a tunnel route. Enter the subdomain, select the domain, and enter the service URL (`http://localhost:8000`).
 
-## Create Forgejo Server
+## Adding a Forgejo Service
 
 Proceed with the Raspberry Pi terminal.
 
@@ -378,7 +385,6 @@ Add the `forgejo` package to the environment:
 
 ```nix
   environment.systemPackages = with pkgs; [
-    bun
     forgejo
     git
   ];
@@ -418,7 +424,7 @@ sudo -u forgejo FORGEJO_WORK_DIR=/var/lib/forgejo forgejo admin user create --us
 
 #### 5. Create CNAME record
 
-Open Cloudflare DNS and copy the same target value you used for the CNAME record above. The name must match the subdomain (`git`).
+Open Cloudflare DNS and copy the target value you used for the CNAME record above. The name must match the subdomain (`git`).
 
 #### 6. Create tunnel route
 

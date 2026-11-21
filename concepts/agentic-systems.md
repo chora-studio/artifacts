@@ -1,6 +1,6 @@
 ---
 type: artifact
-category: about
+category: concepts
 status: active
 author: Chora Studio
 title: Agentic Systems

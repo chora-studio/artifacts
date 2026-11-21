@@ -4,7 +4,7 @@ category: about
 status: active
 author: Chora Studio
 title: Research Artifacts
-description: A brief introduction to research artifacts.
+description: An introduction to research artifacts.
 created: 2026-11-15
 updated: 2026-11-18
 ---
@@ -17,7 +17,7 @@ The following text provides a brief introduction to research artifacts in the co
 
 This web page is a research artifact but a research artifact is more than a simple web page. This web page is just one way of viewing and interacting with this particular research artifact. While options for this research artifact are limited at this stage, Chora Studio is exploring other ways of viewing and interacting with research artifacts and artifacts more broadly.
 
-For now, and within the context of Chora Studio, a research artifact starts out as a markdown file. This research artifact started as a markdown file in a directory (`about`) inside another directory (`artifacts`) inside another directory (`chora-studio`). In this particular setup, the parent directory (`chora-studio`) is a knowledge base for Chora Studio. The knowledge base is a topic for another research artifact but it's worth noting to undestand the context.
+For now, and within the context of Chora Studio, a research artifact starts out as a markdown file. This research artifact started as a markdown file in a directory (`about`) inside another directory (`artifacts`) inside another directory (`chora-studio`). In this particular setup, the parent directory (`chora-studio`) is a knowledge base for Chora Studio. The knowledge base is a topic for another research artifact but it's worth noting to understand the context.
 
 The immediate subdirectory (`artifacts`) is also a Git repository, so changes to markdown files in the subdirectory (`about`) of the subdirectory (`artifacts`), or any other subdirectory of the subdirectory, can be tracked with Git and pushed to a remote repository (`https://github.com/chora-studio/artifacts`). After changes are committed and pushed, the changes are pulled into a Git submodule (`artifacts`) in another repository (`website`).
 
