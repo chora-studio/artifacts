@@ -6,430 +6,111 @@ author: Chora Studio
 title: Self-Hosted Server
 description: A tutorial for running a self-hosted server.
 created: 2026-11-18
-updated: 2026-11-18
+updated: 2026-11-22
+order: 0
 ---
 
 # Self-Hosted Server
 
-This is a tutorial for running a self-hosted server. This setup is experimental and still being tested; this setup is not recommended for production.
+This is a tutorial for running a self-hosted server.
 
-## Prerequisites
+***NOTE: The server setup used in this tutorial is experimental. This server setup is currently NOT recommended for a production environment.***
 
-#### Software
+## Index
 
-- Nix
+- [Self-Hosted Server (Part 1)](./self-hosted-server-1)
+- [Self-Hosted Server (Part 2)](./self-hosted-server-2)
+- [Self-Hosted Server (Part 3)](./self-hosted-server-3)
 
-#### Hardware
+## Overview
 
-- Raspberry Pi 4 Model B (or later)
-- SD Card (San Disk recommended)
+*A brief overview of the tutorial.*
 
-#### Services
+### Part 1
 
-- Cloudflare (with a purchased domain)
+The [first part](./self-hosted-server-1) covers the following:
 
-## Installing NixOS
+- Installing NixOS
+- Setting Up NixOS
+- SSH Access and Security
 
-Insert the SD card into the computer before proceeding. You will need a browser with internet access and `nix` installed on the computer.
+### Part 2
 
-#### 1. Download the latest SD card image
+The [second part](./self-hosted-server-2) covers the following:
 
-```
-https://hydra.nixos.org/job/nixos/release-25.11/nixos.sd_image.aarch64-linux
-```
+- Adding a Cloudflared Service
+- Adding a Forgejo Service
+- Adding a Caddy Service
 
-#### 2. Decompress the downloaded SD card image
+### Part 3
 
-```
-nix-shell -p zstd --run "unzstd <img-name>.img.zst"
-```
+The [third part](./self-hosted-server-3) covers the following:
 
-#### 3. Write the downloaded image to the SD card
+- Adding a Tailscale Service
+- Adding a Backup Device
+- Adding a Rustic Service
 
-```
-sudo dd if=<img-name>.img of=/dev/mmcblk0 bs=10MB oflag=dsync status=progress
-```
+## Software
 
-## Setting Up NixOS
+*A brief overview of the required software.*
 
-Insert the SD card into the Raspberry Pi before proceeding. You will need a monitor and keyboard plugged into the Raspberry Pi.
+### Nix (or zstd)
 
-#### 1. Connect with WiFi (or ethernet)
+Nix (or `zstd`) is only needed for the initial NixOS installation. Other tools can be used but they are currently not covered in this tutorial.
 
-```
-nmtui
-```
+#### Requirements
 
-#### 2. Generate NixOS configuration files
+- v2 (or later)
 
-```
-sudo nixos-generate-config
-```
+## Hardware
 
-#### 3. Update NixOS configuration file
+*A brief overview of the required hardware.*
 
-```
-sudo nano /etc/nixos/configuration.nix
-```
+### Keyboard
 
-```nix
-{ config, lib, pkgs, ... }:
+You'll need a keyboard for the initial device setup.
 
-{
-  imports = [ ./hardware-configuration.nix ];
+### Monitor
 
-  boot.loader.grub.enable = false;
-  boot.loader.generic-extlinux-compatible.enable = true;
+You'll need a monitor and HDMI cable for the initial device setup.
 
-  networking = {
-    hostName = "raspberrypi";
-    firewall = {
-      allowedTCPPorts = [ 22 ];
-    };
-    networkmanager = {
-      enable = true;
-      wifi.powersave = false;
-    };
-  };
+### ARM-64 Device
 
-  users.users.user = {
-    isNormalUser = true;
-    extraGroups = [ "wheel" "networkmanager" ];
-    initialPassword = "password";
-  };
+This device is your physical server. A Raspberry Pi 4 Model B was used for a test setup but any ARM-64 device that meets the hardware requirements listed below could also be used. Any other device that can run NixOS could also be used but they are currently not covered in this tutorial.
 
-  services.openssh = {
-    enable = true;
-    openFirewall = true;
-  };
+#### Requirements
 
-  system.stateVersion = "25.11";
-}
-```
+- 4GB RAM (or more)
 
-#### 4. Rebuild and reboot 
+### SD Card
 
-```
-sudo nixos-rebuild switch
-```
+Depending on your device, a micro SD card and converter or a standard SD card. A Raspberry Pi uses a micro SD card, so the converter is needed for the laptop or computer that initially installs NixOS. Other storage devices could also be used but they are currently not covered in this tutorial.
 
-Manually turn off Raspberry Pi and then turn back on.
+#### Requirements
 
-## SSH Access and Security
+- 8GB Storage (or more)
 
-Start from the computer and then proceed with the Raspberry Pi terminal (following step 3). The monitor and keyboard used with the Raspberry Pi are no longer needed now that SSH is enabled on the device.
+## Services
 
-#### 1. Generate SSH key
+*A brief overview of the required services.*
 
-```
-ssh-keygen -t ed25519
-```
+### Cloudflare
 
-#### 2. Copy SSH key to Raspberry Pi
+Cloudflare provides great services but users are required to trust Cloudflare with their identity and the ability to monitor their traffic. Alternative options are being explored but they come with heavy setup and maintenance costs and are therefore currently out of scope for this tutorial.
 
-```
-ssh-copy-id user@raspberrypi
-```
+#### Requirements
 
-#### 3. SSH with password authentication
+- Cloudflare account
+- Pre-purchased domain
 
-```
-ssh user@raspberrypi
-```
+### Tailscale
 
-#### 4. Disable SSH password authentication
+Tailscale provides great services but users are required to trust Tailscale with their identity and network topology metadata. Alternatives options are being explored but they come with heavy setup costs and are therefore currently out of scope for this tutorial.
 
-```
-sudo nano /etc/nixos/configuration.nix
-```
+#### Requirements
 
-```nix
-  services.openssh = {
-    enable = true;
-    openFirewall = true;
-    settings = {
-      PermitRootLogin = "no";
-      PasswordAuthentication = false;
-    };
-  };
-```
+- Tailscale account
 
-#### 5. Update system user password
+## Next Steps
 
-```
-passwd
-```
-
-#### 6. Rebuild and reboot
-
-```
-sudo nixos-rebuild switch
-```
-
-```
-sudo reboot
-```
-
-## Adding a Cloudflared Service
-
-Proceed with Cloudflare website and the Raspberry Pi terminal.
-
-#### 1. Create Cloudflare tunnel
-
-Open Cloudflare and create a new tunnel. The name of the tunnel can be whatever you want but using the same name as the hostname might make it easier to remember since only one tunnel will be used for this device.
-
-#### 2. Create connector token
-
-Copy any cloudflared connector command that includes a token hash. This tutorial does not use the cloudflared binary. Paste the content somewhere safe and then cut the token hash and delete the remainder.
-
-Run the following to decrypt the token hash:
-
-```
-echo "TOKEN_HASH" | tr '_-' '/+' | base64 -d
-```
-
-Copy the JSON output and create a new file:
-
-```
-sudo mkdir /etc/cloudflared
-sudo nano /etc/cloudflared/credentials.json 
-```
-
-Paste the JSON output and update the format:
-
-```
-{
-  "AccountTag": "<VALUE_A>",
-  "TunnelID": "<VALUE_T>",
-  "TunnelSecret": "<VALUE_S>"
-}
-```
-
-#### 3. Update Nixos configuration
-
-Open the NixOS configuration file:
-
-```
-sudo nano /etc/nixos/configuration.nix
-```
-
-Add the following group and user:
-
-```nix
-  users.groups.cloudflared = { };
-  users.users.cloudflared = {
-    group = "cloudflared";
-    isSystemUser = true;
-  };
-```
-
-Add the following service:
-
-```nix
-  services.cloudflared = {
-    enable = true;
-    tunnels.example = {
-      credentialsFile = "/etc/cloudflared/credentials.json";
-      ingress = {
-        "dev.example.com" = "http://localhost:8000";
-        "git.example.com" = "http://localhost:3000";
-      };
-      default = "http_status:404";
-    };
-  };
-```
-
-Note the two domains added (`dev.example.com` and `git.example.com`). These domains will be configured in the following two sections.
-
-#### 4. Rebuild and reboot
-
-```
-sudo nixos-rebuild switch
-```
-
-```
-sudo reboot
-```
-
-## Adding a Website Service
-
-Proceed with the Raspberry Pi terminal.
-
-#### 1. Update Nixos configuration
-
-Update the existing configuration file:
-
-```
-sudo nano /etc/nixos/configuration.nix
-```
-
-Add the new `./website-configuration.nix` import:
-
-```nix
-  imports = [
-    ./hardware-configuration.nix
-    ./website-configuration.nix
-  ];
-```
-
-Add the following packages to the environment:
-
-```nix
-  environment.systemPackages = with pkgs; [
-    git
-  ];
-```
-
-Create `/etc/nixos/website-configuration.nix` file:
-
-```
-sudo nano /etc/nixos/website-configuration.nix
-```
-
-Add the following systemd service:
-
-```nix
-{ config, pkgs, ... }:
-
-let
-  caddyConfig = pkgs.writeText "Caddyfile" ''
-    :8000 {
-      root * /home/user/website/dist
-      encode gzip zstd
-      try_files {path} {path}/index.html {path}.html {path}/ /index.html
-      file_server
-    }
-  '';
-in
-{
-  systemd.services.website = {
-    description = "website";
-    after = [ "network.target" ];
-    wants = [ "network.target" ];
-    serviceConfig = {
-      ExecStart = "${pkgs.caddy}/bin/caddy run --config ${caddyConfig} --adapter caddyfile";
-      Restart = "always";
-      RestartSec = "5";
-    };
-  };
-}
-```
-
-#### 2. Rebuild system
-
-```
-sudo nixos-rebuild switch
-```
-
-#### 3. Clone and build website
-
-```
-git clone https://github.com/example/website
-```
-
-```
-cd website
-```
-
-```
-git submodule init
-```
-
-```
-git submodule update
-```
-
-```
-nix develop
-```
-
-```
-bun install
-```
-
-```
-bun run build
-```
-
-#### 4. Restart service and check status
-
-```
-sudo systemctl restart website
-```
-
-```
-sudo systemctl status website
-```
-
-#### 5. Create CNAME record
-
-Open Cloudflare Tunnels and copy the tunnel ID, then open Cloudflare DNS and create a CNAME record. The name must match the subdomain used for the ingress value above (`dev`) and the target must use the following format `<TUNNEL_ID>.cfargotunnel.com` (using the copied token ID).
-
-#### 6. Create tunnel route
-
-Open Cloudflare Tunnels and create a tunnel route. Enter the subdomain, select the domain, and enter the service URL (`http://localhost:8000`).
-
-## Adding a Forgejo Service
-
-Proceed with the Raspberry Pi terminal.
-
-#### 1. Update NixOS configuration
-
-Update the configuration file:
-
-```
-sudo nano /etc/nixos/configuration.nix
-```
-
-Add the `forgejo` package to the environment:
-
-```nix
-  environment.systemPackages = with pkgs; [
-    forgejo
-    git
-  ];
-```
-
-Add forgejo as a service:
-
-```nix
-  services.forgejo = {
-    enable = true;
-    database.type = "sqlite3";
-    settings.server.DOMAIN = "git.example.com";
-    settings.server.ROOT_URL = "https://git.example.com/";
-    settings.server.DISABLE_SSH = true;
-    settings.service.DISABLE_REGISTRATION = true;
-    settings.security.REVERSE_PROXY_TRUSTED_PROXIES = "127.0.0.1/32";
-  };
-```
-
-#### 2. Rebuild system
-
-```
-sudo nixos-rebuild switch
-```
-
-#### 3. Check service status
-
-```
-sudo systemctl status forgejo
-```
-
-#### 4. Create admin user
-
-```
-sudo -u forgejo FORGEJO_WORK_DIR=/var/lib/forgejo forgejo admin user create --username user --email user@example.com --password password
-```
-
-#### 5. Create CNAME record
-
-Open Cloudflare DNS and copy the target value you used for the CNAME record above. The name must match the subdomain (`git`).
-
-#### 6. Create tunnel route
-
-Open Cloudflare Tunnels and create a tunnel route. Enter the subdomain, select the domain, and enter the service URL (`http://localhost:3000`).
-
-## References
-
-- https://nixos.wiki/wiki/NixOS_on_ARM#Installation
+- [Part 1](./self-hosted-server-1)

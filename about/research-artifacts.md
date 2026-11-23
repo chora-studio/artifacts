@@ -6,7 +6,7 @@ author: Chora Studio
 title: Research Artifacts
 description: An introduction to research artifacts.
 created: 2026-11-15
-updated: 2026-11-18
+updated: 2026-11-22
 ---
 
 # Research Artifacts
@@ -26,7 +26,3 @@ The second repository (`website`) is the source code for a website (`https://cho
  The source code for the website is written in a way that all markdown files within the Git submodule (`artifacts`) are compiled as web pages when the source code is compiled. The compiled source code is pushed to a branch on the remote repository that automatically deploys the website including all the compiled research artifacts in the form of web pages. The source code also compiles an [index page](../) for the research artifacts.
 
  So back from the start, the research artifacts are written as markdown files (a widely supported and portable format), changes to those files are tracked with Git and pushed to a remote repository (tracking changes is important for several reasons), and then those changes are pulled into a submodule in another repository and compiled and deployed as web pages.
-
-## Feeding The Artifacts
-
-*check back soon*
