@@ -105,7 +105,7 @@ Cloudflare provides great services but users are required to trust Cloudflare wi
 
 ### Tailscale
 
-Tailscale provides great services but users are required to trust Tailscale with their identity and network topology metadata. Alternatives options are being explored but they come with heavy setup costs and are therefore currently out of scope for this tutorial.
+Tailscale provides great services but users are required to trust Tailscale with their identity and network topology metadata. Alternative options are being explored but they come with heavy setup and maintenance costs and are therefore currently out of scope for this tutorial.
 
 #### Requirements
 

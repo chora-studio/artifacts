@@ -214,12 +214,18 @@ sudo nano /etc/nixos/rustic-configuration.nix
       one-file-system = true
       globs = [
         "!/nix/store",
+        "!/var/cache",
+        "!/var/log",
         "!/var/tmp",
       ]
 
     [[backup.snapshots]]
       name = "root"
       sources = ["/"]
+
+    [[backup.snapshots]]
+      name = "nixos"
+      sources = ["/etc/nixos"]
 
     [forget]
       keep-daily = 7
