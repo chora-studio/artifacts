@@ -6,15 +6,13 @@ author: Chora Studio
 title: Self-Hosted Server
 description: A tutorial for running a self-hosted server.
 created: 2026-11-18
-updated: 2026-11-22
+updated: 2026-11-26
 order: 0
 ---
 
 # Self-Hosted Server
 
 This is a tutorial for running a self-hosted server.
-
-***NOTE: The server setup used in this tutorial is experimental. This server setup is currently NOT recommended for a production environment.***
 
 ## Index
 
@@ -30,25 +28,27 @@ This is a tutorial for running a self-hosted server.
 
 The [first part](./self-hosted-server-1) covers the following:
 
-- Installing NixOS
-- Setting Up NixOS
-- SSH Access and Security
+- NixOS Installation
+- NixOS Configuration
+- SSH and Password
 
 ### Part 2
 
 The [second part](./self-hosted-server-2) covers the following:
 
-- Adding a Cloudflared Service
-- Adding a Forgejo Service
-- Adding a Caddy Service
+- Tunnel Service
+- Forgejo Service
+- Runner Service
+- Website Service
+- Forgejo Actions
 
 ### Part 3
 
 The [third part](./self-hosted-server-3) covers the following:
 
-- Adding a Tailscale Service
-- Adding a Backup Device
-- Adding a Rustic Service
+- Tailscale Service
+- Backup Device
+- Rustic Service
 
 ## Software
 
@@ -96,7 +96,7 @@ Depending on your device, a micro SD card and converter or a standard SD card. A
 
 ### Cloudflare
 
-Cloudflare provides great services but users are required to trust Cloudflare with their identity and the ability to monitor their traffic. Alternative options are being explored but they come with heavy setup and maintenance costs and are therefore currently out of scope for this tutorial.
+Cloudflare provides great services but users are required to trust Cloudflare with their identity and the ability to monitor their traffic. Alternative options are being explored but they come with heavy setup and maintenance costs and are therefore currently out of scope for this tutorial. No additional costs or subscriptions are required for this tutorial.
 
 #### Requirements
 
@@ -105,7 +105,7 @@ Cloudflare provides great services but users are required to trust Cloudflare wi
 
 ### Tailscale
 
-Tailscale provides great services but users are required to trust Tailscale with their identity and network topology metadata. Alternative options are being explored but they come with heavy setup and maintenance costs and are therefore currently out of scope for this tutorial.
+Tailscale provides great services but users are required to trust Tailscale with their identity and network topology metadata. Alternative options are being explored but they come with heavy setup and maintenance costs and are therefore currently out of scope for this tutorial. No additional costs or subscriptions are required for this tutorial.
 
 #### Requirements
 

@@ -6,7 +6,7 @@ author: Chora Studio
 title: Self-Hosted Server (Part 3)
 description: The third part of the self-hosted server tutorial.
 created: 2026-11-22
-updated: 2026-11-22
+updated: 2026-11-26
 order: 3
 ---
 
@@ -16,15 +16,23 @@ The third part of the self-hosted server tutorial. This part assumes you complet
 
 ## Prerequisites
 
-See software, hardware, and services on the [index page](./self-hosted-server). This tutorial also requires a second ARM-64 device and SD card for managing backups.
+See the [index page](./self-hosted-server) for required software, hardware, and services. This part also requires a second ARM-64 device and SD card.
 
-## Adding a Tailscale Service
+## Tailscale Service
 
-#### 1. Create auth key
+#### 1. Create authorization key
 
 Open Tailscale settings, generate an auth key, and copy the key.
 
 #### 2. Update NixOS Configuration
+
+Run the following:
+
+```
+sudo nano /etc/nixos/configuration.nix
+```
+
+Update the file to include the following:
 
 ```nix
     firewall = {
@@ -33,31 +41,40 @@ Open Tailscale settings, generate an auth key, and copy the key.
     };
 ```
 
+Update the file to include the following:
+
 ```nix
   environment.systemPackages = with pkgs; [
-    git
     forgejo
     tailscale
   ];
 ```
 
+Update the file to include the following:
+
 ```nix
   services.tailscale.enable = true;
 ```
 
-#### 3. Rebuild
+#### 3. Rebuild the system
+
+Run the following:
 
 ```
 sudo nixos-rebuild switch
 ```
 
-#### 4. Add Machine
+#### 4. Add tailscale machine
+
+Run the following:
 
 ```
 sudo tailscale up --auth-key=tskey-auth-XXXXXXX --hostname=<name>
 ```
 
-#### 5. Verify Status
+#### 5. Verify tailscale status
+
+Run the following:
 
 ```
 tailscale status
@@ -77,27 +94,33 @@ Proceed with computer, then backup device, then server device.
 
 #### 1. Generate SSH key
 
-Proceed with computer.
+Run the following on the computer:
 
 ```
-ssh-keygen -t ed25519 -f ~/backup-raspberrypi -N '' -C 'backup@raspberrypi'
+ssh-keygen -t ed25519 -f ~/backup-server -N '' -C 'backup@server'
 ```
 
-```
-cat ~/backup-raspberrypi.pub
-```
+Run the following:
 
 ```
-cat ~/backup-raspberrypi
+cat ~/backup-server.pub
+```
+
+Run the following:
+
+```
+cat ~/backup-server
 ```
 
 #### 2. Update NixOS configuration (backup device)
 
-Proceed with the backup device.
+Run the following on the backup device:
 
 ```
 sudo nano /etc/nixos/configuration.nix
 ```
+
+Update the file to include the following:
 
 ```nix
   users.users.backup = {
@@ -106,12 +129,14 @@ sudo nano /etc/nixos/configuration.nix
     home = "/srv/backups";
     shell = "${pkgs.coreutils}/bin/false";
     openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAA... user@raspberrypi"
+      "ssh-ed25519 AAAA... user@server"
     ];
   };
 
   users.groups.backup = {};
 ```
+
+Update the file to include the following:
 
 ```nix
   system.activationScripts.backup-dirs = ''
@@ -119,6 +144,8 @@ sudo nano /etc/nixos/configuration.nix
       /srv/backups /srv/backups/raspberyypi
   '';
 ```
+
+Update the file to include the following:
 
 ```nix
   services.openssh.extraConfig = ''
@@ -130,45 +157,62 @@ sudo nano /etc/nixos/configuration.nix
   '';
 ```
 
+Run the following:
+
 ```
 sudo nixos-rebuild switch
 ```
 
 #### 3. Update NixOS configuration file (server device)
 
-Proceed with the server device.
+Run the following on the server device:
 
 ```
 sudo install -d -m 0700 /etc/rustic
 ```
 
+Run the following:
+
 ```
 sudo nano /etc/rustic/id_ed25519
 ```
+
+Run the following:
 
 ```
 sudo chmod 600 /etc/rustic/id_ed25519
 ```
 
+Run the following:
+
 ```
 sudo nano /etc/rustic/repo-password
 ```
+
+Run the following:
 
 ```
 sudo chmod 600 /etc/rustic/repo-password
 ```
 
+Run the following:
+
 ```
 sudo nano /etc/nixos/configuration.nix
 ```
 
+Update the file to include the following:
+
 ```nix
   imports = [
     ./hardware-configuration.nix
+    ./runner-configuration.nix
     ./rustic-configuration.nix
     ./website-configuration.nix
   ];
 ```
+
+Update the file to include the following:
 
 ```nix
   services.openssh = {
@@ -187,9 +231,13 @@ sudo nano /etc/nixos/configuration.nix
   };
 ```
 
+Run the following:
+
 ```
 sudo nano /etc/nixos/rustic-configuration.nix
 ```
+
+Update the file to include the following:
 
 ```nix
 { config, lib, pkgs, ... }:
@@ -206,7 +254,7 @@ sudo nano /etc/nixos/rustic-configuration.nix
 
     [repository.options]
       endpoint = "ssh://backup"
-      root = "/srv/backups/raspberrypi"
+      root = "/srv/backups/server"
       user = "backup"
       key = "/etc/rustic/id_ed25519"
 
@@ -268,13 +316,19 @@ sudo nano /etc/nixos/rustic-configuration.nix
 }
 ```
 
+Run the following:
+
 ```
 sudo nixos-rebuild switch
 ```
 
+Run the following:
+
 ```
 sudo rustic -P backup init
 ```
+
+Run the following:
 
 ```
 sudo rustic -P backup backup
@@ -282,8 +336,8 @@ sudo rustic -P backup backup
 
 #### 4. Clean up key files
 
-Proceed with computer.
+Run the following on the computer:
 
 ```
-rm backup-raspberrypi backup-raspberrypi.pub
+rm backup-server backup-server.pub
 ```

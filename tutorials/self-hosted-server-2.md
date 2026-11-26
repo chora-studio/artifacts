@@ -6,7 +6,7 @@ author: Chora Studio
 title: Self-Hosted Server (Part 2)
 description: The second part of the self-hosted server tutorial.
 created: 2026-11-22
-updated: 2026-11-22
+updated: 2026-11-26
 order: 2
 ---
 
@@ -16,12 +16,11 @@ The second part of the self-hosted server tutorial. This part assumes you comple
 
 ## Prerequisites
 
-See software, hardware, and services on the [index page](./self-hosted-server).
+See the [index page](./self-hosted-server) for required software, hardware, and services.
 
+## Tunnel Service
 
-## Adding a Cloudflared Service
-
-Proceed with Cloudflare website and the Raspberry Pi terminal.
+Proceed with the Cloudflare website and the terminal of your server.
 
 #### 1. Create Cloudflare tunnel
 
@@ -29,7 +28,7 @@ Open Cloudflare and create a new tunnel. The name of the tunnel can be whatever 
 
 #### 2. Create connector token
 
-Copy any cloudflared connector command that includes a token hash. This tutorial does not use the cloudflared binary. Paste the content somewhere safe and then cut the token hash and delete the remainder.
+Copy the token hash from one of the cloudflared connector commands on the tunnels page. This tutorial does not use the cloudflared binary.
 
 Run the following to decrypt the token hash:
 
@@ -37,14 +36,17 @@ Run the following to decrypt the token hash:
 echo "TOKEN_HASH" | tr '_-' '/+' | base64 -d
 ```
 
-Copy the JSON output and create a new file:
+Copy the JSON output and then create a new directory and file:
 
 ```
 sudo mkdir /etc/cloudflared
+```
+
+```
 sudo nano /etc/cloudflared/credentials.json 
 ```
 
-Paste the JSON output and update the format:
+Paste the JSON output into the file and update the field names:
 
 ```
 {
@@ -54,15 +56,17 @@ Paste the JSON output and update the format:
 }
 ```
 
+Save and exit the file editor.
+
 #### 3. Update Nixos configuration
 
-Open the NixOS configuration file:
+Run the following:
 
 ```
 sudo nano /etc/nixos/configuration.nix
 ```
 
-Add the following group and user:
+Update the file to include the following:
 
 ```nix
   users.groups.cloudflared = { };
@@ -72,47 +76,55 @@ Add the following group and user:
   };
 ```
 
-Add the following service:
+Update the file to include the following:
 
 ```nix
   services.cloudflared = {
     enable = true;
-    tunnels.example = {
+    tunnels.default = {
       credentialsFile = "/etc/cloudflared/credentials.json";
       ingress = {
-        "dev.example.com" = "http://localhost:8000";
+        "example.com" = "http://localhost:8000";
+        "dev.example.com" = "http://localhost:8080";
         "git.example.com" = "http://localhost:3000";
+        "www.example.com" = "http://localhost:8000";
       };
       default = "http_status:404";
     };
   };
 ```
 
-Note the two domains added (`dev.example.com` and `git.example.com`). These domains will be configured in the following two sections.
+Save and exit the file editor.
 
-#### 4. Rebuild and reboot
+#### 4. Rebuild the system
+
+Run the following:
 
 ```
 sudo nixos-rebuild switch
 ```
 
+#### 5. Check service status
+
+Run the following:
+
 ```
-sudo reboot
+sudo systemctl status cloudflared-tunnel-default
 ```
 
-## Adding a Forgejo Service
+## Forgejo Service
 
-Proceed with the Raspberry Pi terminal.
+Proceed with the terminal of your server.
 
 #### 1. Update NixOS configuration
 
-Update the configuration file:
+Run the following:
 
 ```
 sudo nano /etc/nixos/configuration.nix
 ```
 
-Add the `forgejo` package to the environment:
+Update the file to include the following:
 
 ```nix
   environment.systemPackages = with pkgs; [
@@ -120,7 +132,7 @@ Add the `forgejo` package to the environment:
   ];
 ```
 
-Add forgejo as a service:
+Update the file to include the following:
 
 ```nix
   services.forgejo = {
@@ -134,7 +146,11 @@ Add forgejo as a service:
   };
 ```
 
-#### 2. Rebuild system
+Save and exit the file editor.
+
+#### 2. Rebuild the system
+
+Run the following:
 
 ```
 sudo nixos-rebuild switch
@@ -142,11 +158,15 @@ sudo nixos-rebuild switch
 
 #### 3. Check service status
 
+Run the following:
+
 ```
 sudo systemctl status forgejo
 ```
 
 #### 4. Create admin user
+
+Run the following:
 
 ```
 sudo -u forgejo FORGEJO_WORK_DIR=/var/lib/forgejo forgejo admin user create --username user --email user@example.com --password password
@@ -154,49 +174,140 @@ sudo -u forgejo FORGEJO_WORK_DIR=/var/lib/forgejo forgejo admin user create --us
 
 #### 5. Create CNAME record
 
-Open Cloudflare DNS and copy the target value you used for the CNAME record above. The name must match the subdomain (`git`).
+Open Cloudflare Tunnels and copy the tunnel ID, then open Cloudflare DNS and create a CNAME record for the `git` subdomain. The target must use the following format `<TUNNEL_ID>.cfargotunnel.com`.
 
 #### 6. Create tunnel route
 
 Open Cloudflare Tunnels and create a tunnel route. Enter the subdomain, select the domain, and enter the service URL (`http://localhost:3000`).
 
-## Adding a Website Service
+## Runner Service
 
-Proceed with the Raspberry Pi terminal.
-
-#### 1. Update Nixos configuration
-
-Update the existing configuration file:
+Run the following:
 
 ```
 sudo nano /etc/nixos/configuration.nix
 ```
 
-Add the new `./website-configuration.nix` import:
+Update the file to include the following:
 
 ```nix
   imports = [
     ./hardware-configuration.nix
+    ./runner-configuration.nix
+  ];
+```
+
+Update the file to include the following:
+
+```nix
+  services.forgejo = {
+    enable = true;
+    database.type = "sqlite3";
+    settings.server.DOMAIN = "git.example.com";
+    settings.server.ROOT_URL = "https://git.example.com/";
+    settings.server.DISABLE_SSH = true;
+    settings.service.DISABLE_REGISTRATION = true;
+    settings.security.REVERSE_PROXY_TRUSTED_PROXIES = "127.0.0.1/32";
+    settings.actions.ENABLED = true;
+    settings.actions.DEFAULT_ACTIONS_URL = "github";
+  };
+```
+
+Run the following:
+
+```
+sudo nano /etc/nixos/runner-configuration.nix
+```
+
+Update the file to include the following:
+
+```nix
+{ config, lib, pkgs, ... }:
+
+{
+  systemd.services."gitea-runner-default".serviceConfig.DynamicUser = lib.mkForce false;
+
+  users.users.gitea-runner = {
+    isSystemUser = true;
+    group = "gitea-runner";
+    home = "/var/lib/gitea-runner";
+    createHome = true;
+    shell = pkgs.bash;
+  };
+
+  users.groups.gitea-runner = { };
+
+  systemd.tmpfiles.rules = [
+    "d /var/lib/gitea-runner 0700 gitea-runner gitea-runner -"
+    "d /srv/dev 0755 gitea-runner gitea-runner -"
+    "d /srv/www 0755 gitea-runner gitea-runner -"
+  ];
+
+  services.gitea-actions-runner = {
+    package = pkgs.forgejo-runner;
+    instances.default = {
+      enable = true;
+      name = config.networking.hostName;
+      url = "http://localhost:3000";
+      token = "TODO";
+      labels = [ "native:host" ];
+      hostPackages = with pkgs; [
+        bash
+        bun
+        git
+        nodejs
+      ];
+      settings = {
+        log.level = "info";
+        runner.capacity = 1;
+        cache.dir = "/var/lib/gitea-runner/.cache/actcache";
+        host.workdir_parent = "/var/lib/gitea-runner/.cache/act";
+      };
+    };
+  };
+
+  systemd.services."gitea-runner-default".serviceConfig.ReadWritePaths =
+    lib.mkAfter [ "/srv/dev" "/srv/www" ];
+}
+```
+
+Open forgejo in a web browser and then navigate to the settings of the admin user or organization that will host your website. Go to the settings for runners and copy the runner token and replace the `TODO` above with the runner token. After updating the token, save and exit the file editor.
+
+Run the following:
+
+```
+sudo nixos-rebuild switch
+```
+
+## Website Service
+
+Proceed with the terminal of your server.
+
+#### 1. Update Nixos configuration
+
+Run the following:
+
+```
+sudo nano /etc/nixos/configuration.nix
+```
+
+Update the file to include the following:
+
+```nix
+  imports = [
+    ./hardware-configuration.nix
+    ./runner-configuration.nix
     ./website-configuration.nix
   ];
 ```
 
-Add the following packages to the environment:
-
-```nix
-  environment.systemPackages = with pkgs; [
-    forgejo
-    git
-  ];
-```
-
-Create `/etc/nixos/website-configuration.nix` file:
+Run the following:
 
 ```
 sudo nano /etc/nixos/website-configuration.nix
 ```
 
-Add the following systemd service:
+Update the file to include the following:
 
 ```nix
 { config, pkgs, ... }:
@@ -204,7 +315,13 @@ Add the following systemd service:
 let
   caddyConfig = pkgs.writeText "Caddyfile" ''
     :8000 {
-      root * /home/user/website/dist
+      root * /srv/www
+      encode gzip zstd
+      try_files {path} {path}/index.html {path}.html {path}/ /index.html
+      file_server
+    }
+    :8080 {
+      root * /srv/dev
       encode gzip zstd
       try_files {path} {path}/index.html {path}.html {path}/ /index.html
       file_server
@@ -225,60 +342,109 @@ in
 }
 ```
 
-
-#### 2. Rebuild system
+#### 2. Rebuild the system
 
 ```
 sudo nixos-rebuild switch
 ```
 
-#### 3. Clone and build website
-
-```
-git clone https://github.com/example/website
-```
-
-```
-cd website
-```
-
-```
-git submodule init
-```
-
-```
-git submodule update
-```
-
-```
-nix develop
-```
-
-```
-bun install
-```
-
-```
-bun run build
-```
-
-#### 4. Restart service and check status
-
-```
-sudo systemctl restart website
-```
+#### 3. Check service status
 
 ```
 sudo systemctl status website
 ```
 
-#### 5. Create CNAME record
+#### 4. Create CNAME record
 
-Open Cloudflare Tunnels and copy the tunnel ID, then open Cloudflare DNS and create a CNAME record. The name must match the subdomain used for the ingress value above (`dev`) and the target must use the following format `<TUNNEL_ID>.cfargotunnel.com` (using the copied token ID).
+Open Cloudflare DNS and copy the target used above (same target as the CNAME record for the `git` subdomain), then create CNAME records for the root domain and the `dev` and `www` subdomains using the same target.
 
-#### 6. Create tunnel route
+#### 5. Create tunnel route
 
-Open Cloudflare Tunnels and create a tunnel route. Enter the subdomain, select the domain, and enter the service URL (`http://localhost:8000`).
+Open Cloudflare Tunnels and create tunnel routes for the root domain and the `dev` and `www` subdomains. Enter root or the subdomain name, select the domain, and enter the service URL (`http://localhost:8000` for the root and the `www` subdomain and `http://localhost:8080` for the `dev` subdomain).
+
+## Forgejo Actions
+
+#### 1. Add dev workflow
+
+Run the following inside your website repository:
+
+```
+mkdir -p .forgejo/workflows
+```
+
+```
+nano .forgejo/workflows/dev.yml
+```
+
+Update the file to include the following:
+
+```yml
+on:
+  push:
+    branches:
+      - 'dev'
+
+jobs:
+  build:
+    runs-on: native
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: submod
+        run: |
+            git submodule init
+            git submodule update
+      - name: install
+        run: bun install
+      - name: build
+        run: bun run build
+      - name: deploy
+        run: |
+            rm -rf /srv/dev/*
+            cp -r dist/. /srv/dev/
+```
+
+Save and exit the file editor.
+
+#### 2. Add www workflow
+
+Run the following inside your website repository:
+
+```
+nano .forgejo/workflows/www.yml
+```
+
+Update the file to include the following:
+
+```yml
+on:
+  push:
+    branches:
+      - 'www'
+
+jobs:
+  build:
+    runs-on: native
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: submod
+        run: |
+            git submodule init
+            git submodule update
+      - name: install
+        run: bun install
+      - name: build
+        run: bun run build
+      - name: deploy
+        run: |
+            rm -rf /srv/www/*
+            cp -r dist/. /srv/www/
+```
+
+#### 3. Commit and push changes
+
+Commit and push changes to `main` and then `dev` on your forgejo instance.
 
 ## Next Steps
 
