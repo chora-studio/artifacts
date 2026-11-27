@@ -6,7 +6,7 @@ author: Chora Studio
 title: Self-Hosted Server (Part 1)
 description: The first part of the self-hosted server tutorial.
 created: 2026-11-22
-updated: 2026-11-26
+updated: 2026-11-27
 order: 1
 ---
 
@@ -179,7 +179,7 @@ Update the file to include the following:
 }
 ```
 
-Save and exit the file editor.
+Save the file and exit the editor.
 
 #### 4. Rebuild and reboot 
 
@@ -244,7 +244,7 @@ Update the file to include the following:
   };
 ```
 
-Save and exit the file editor.
+Save the file and exit the editor.
 
 #### 5. Update system user password
 

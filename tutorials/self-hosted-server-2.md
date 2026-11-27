@@ -6,7 +6,7 @@ author: Chora Studio
 title: Self-Hosted Server (Part 2)
 description: The second part of the self-hosted server tutorial.
 created: 2026-11-22
-updated: 2026-11-26
+updated: 2026-11-27
 order: 2
 ---
 
@@ -56,7 +56,7 @@ Paste the JSON output into the file and update the field names:
 }
 ```
 
-Save and exit the file editor.
+Save the file and exit the editor.
 
 #### 3. Update Nixos configuration
 
@@ -94,7 +94,7 @@ Update the file to include the following:
   };
 ```
 
-Save and exit the file editor.
+Save the file and exit the editor.
 
 #### 4. Rebuild the system
 
@@ -146,7 +146,7 @@ Update the file to include the following:
   };
 ```
 
-Save and exit the file editor.
+Save the file and exit the editor.
 
 #### 2. Rebuild the system
 
@@ -271,7 +271,7 @@ Update the file to include the following:
 }
 ```
 
-Open forgejo in a web browser and then navigate to the settings of the admin user or organization that will host your website. Go to the settings for runners and copy the runner token and replace the `TODO` above with the runner token. After updating the token, save and exit the file editor.
+Open forgejo in a web browser and then navigate to the settings of the admin user or organization that will host your website. Go to the settings for runners and copy the runner token and replace the `TODO` above with the runner token. After updating the token, save the file and exit the editor.
 
 Run the following:
 
@@ -331,8 +331,9 @@ in
 {
   systemd.services.website = {
     description = "website";
-    after = [ "network.target" ];
-    wants = [ "network.target" ];
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
     serviceConfig = {
       ExecStart = "${pkgs.caddy}/bin/caddy run --config ${caddyConfig} --adapter caddyfile";
       Restart = "always";
@@ -404,7 +405,7 @@ jobs:
             cp -r dist/. /srv/dev/
 ```
 
-Save and exit the file editor.
+Save the file and exit the editor.
 
 #### 2. Add www workflow
 
